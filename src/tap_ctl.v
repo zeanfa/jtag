@@ -53,15 +53,9 @@ localparam STATE_PAUSE_IR         = 4'hC;
 localparam STATE_EXIT2_IR         = 4'hD;
 localparam STATE_UPDATE_IR			 = 4'hE;
 
-always @(posedge TCK or negedge TRST or negedge TCK) begin
+always @(posedge TCK or negedge TRST) begin
     if (!TRST) begin
-			state <= STATE_TEST_LOGIC_RESET; 
-			UPDATE_IR  	  <= 1'b0;
-			SHIFT_IR        <= 1'b0;
-			UPDATE_DR  	  <= 1'b0;
-			SHIFT_DR        <= 1'b0;
-			CAPTURE_IR      <= 1'b0;
-			CAPTURE_DR      <= 1'b0;
+			state <= STATE_TEST_LOGIC_RESET;
 		  
     end else if (TCK) begin
         case(state)
@@ -131,26 +125,10 @@ always @(posedge TCK or negedge TRST or negedge TCK) begin
             end
             default:           state <= STATE_TEST_LOGIC_RESET;
         endcase
-    end else begin
-		UPDATE_IR  	  <= 1'b0;
-		SHIFT_IR        <= 1'b0;
-		UPDATE_DR  	  <= 1'b0;
-		SHIFT_DR        <= 1'b0;
-		CAPTURE_IR      <= 1'b0;
-		CAPTURE_DR      <= 1'b0;
-
-		case(state)
-			 STATE_UPDATE_IR:  begin UPDATE_IR   		 <= 1'b1; end
-			 STATE_SHIFT_IR:   begin SHIFT_IR         <= 1'b1; end
-			 STATE_UPDATE_DR:  begin UPDATE_DR   		 <= 1'b1; end
-			 STATE_SHIFT_DR:   begin SHIFT_DR         <= 1'b1; end
-			 STATE_CAPTURE_DR: begin CAPTURE_DR       <= 1'b1; end
-			 STATE_CAPTURE_IR: begin CAPTURE_IR       <= 1'b1; end
-		endcase
-	end
+    end 
 end
 
-/*always @(negedge TCK) begin
+always @(negedge TCK) begin
 
     UPDATE_IR  	  <= 1'b0;
     SHIFT_IR        <= 1'b0;
@@ -167,7 +145,7 @@ end
         STATE_CAPTURE_DR: begin CAPTURE_DR       <= 1'b1; end
         STATE_CAPTURE_IR: begin CAPTURE_IR       <= 1'b1; end
     endcase
-end*/
+end
 
 assign TCKN = !TCK;
 assign RST = TRST;
