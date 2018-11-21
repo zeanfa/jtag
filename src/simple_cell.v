@@ -35,7 +35,7 @@ module simple_cell(
 	assign TDOS = capture_reg;
 
 	always @(posedge CAPTURE) begin
-		capture_reg <=  (SYSTEM_DATA_IN & MODE_SHIFT_LOAD) | (TDIS & !MODE_SHIFT_LOAD);
+		capture_reg <=  (SYSTEM_DATA_IN & !MODE_SHIFT_LOAD) | (TDIS & MODE_SHIFT_LOAD);
 	end
 
 	always @(posedge UPDATE) begin

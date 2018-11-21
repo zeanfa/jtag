@@ -24,6 +24,7 @@ module z_state(
     output TDO
     );
 	
-	assign TDO = ENABLE ? NEG_LATCH_TDO : 1'bz;
+	//assign TDO = ENABLE ? NEG_LATCH_TDO : 1'bz;
+	assign TDO = NEG_LATCH_TDO;
 
 endmodule

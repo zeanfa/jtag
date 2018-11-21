@@ -19,66 +19,32 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module device_id(
-    input TDI,
-    input CAPTURE,
     input SHIFT,
     input ENABLE,
-    input MODE_SHIFT_LOAD,
-    output TDO
+	 input D_RST,
+    output reg TDO
     );
 	 
-	 wire TDO_1;
-	 wire TDO_2;
-	 wire TDO_3;
-	 wire [3:0] ID_REG;
-	 wire INPUT_CAPTURE;
+	 wire [7:0] ID_REG;
+	 reg 	[2:0] counter;
 	 
-	 assign ID_REG = 4'hA;
-	 assign INPUT_CAPTURE = ENABLE & (CAPTURE | SHIFT);
+	 assign ID_REG = 8'hAB;
+	 //assign TDO = ID_REG[counter];
 	 
-	 simple_cell input_cell_1 (
-		.TDIS(TDI),
-		.CAPTURE(INPUT_CAPTURE),
-		.UPDATE(),
-		.MODE_SHIFT_LOAD(MODE_SHIFT_LOAD),
-		.MODE_TEST_NORMAL(),
-		.SYSTEM_DATA_IN(ID_REG[0]),
-		.TDOS(TDO_1),
-		.SYSTEM_DATA_OUT()
-	);
-	
-	simple_cell input_cell_2 (
-		.TDIS(TDO_1),
-		.CAPTURE(INPUT_CAPTURE),
-		.UPDATE(),
-		.MODE_SHIFT_LOAD(MODE_SHIFT_LOAD),
-		.MODE_TEST_NORMAL(),
-		.SYSTEM_DATA_IN(ID_REG[1]),
-		.TDOS(TDO_2),
-		.SYSTEM_DATA_OUT()
-	);
-	
-	simple_cell input_cell_3 (
-		.TDIS(TDO_2),
-		.CAPTURE(INPUT_CAPTURE),
-		.UPDATE(),
-		.MODE_SHIFT_LOAD(MODE_SHIFT_LOAD),
-		.MODE_TEST_NORMAL(),
-		.SYSTEM_DATA_IN(ID_REG[2]),
-		.TDOS(TDO_3),
-		.SYSTEM_DATA_OUT()
-	);
-	
-	simple_cell input_cell_4 (
-		.TDIS(TDO_3),
-		.CAPTURE(INPUT_CAPTURE),
-		.UPDATE(),
-		.MODE_SHIFT_LOAD(MODE_SHIFT_LOAD),
-		.MODE_TEST_NORMAL(),
-		.SYSTEM_DATA_IN(ID_REG[3]),
-		.TDOS(TDO),
-		.SYSTEM_DATA_OUT()
-	);
+	 always @(posedge SHIFT or negedge D_RST) begin
+		if (~D_RST) begin
+			TDO <= 1'b0;
+			counter <= 3'b0;
+			//ID_REG <= 32'hABCD12FF;
+		end
+		
+		else begin
+			if (ENABLE) begin
+				TDO <= ID_REG >> counter;
+				counter <= counter + 1;
+			end
+		end
+	 end
 
 
 endmodule

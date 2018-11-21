@@ -31,10 +31,25 @@ module main_module(
 	 output CORE_OUT_2,
 	 output PIN_OUT_1,
 	 output PIN_OUT_2,
-    output TDO
+    output TDO,
+	 output [3:0] STATE_OUT_MAIN,
+	 output TMS_LA,
+	 output TDO_LA,
+	 output TDI_LA,
+	 output TCK_LA,
+	 output [7:0] LEDs
     );
 	 
+	// For logic analyzer
 
+	assign TMS_LA = TMS;
+	assign TDO_LA = TDO;
+	assign TDI_LA = TDI;
+	assign TCK_LA = TCK;
+	
+	assign LEDs[1] = 1'b0;
+	assign LEDs[0] = 1'b0;
+		
 	// TAP outputs
 	wire TAP_UPDATE_IR;
 	wire TAP_SHIFT_IR;
@@ -46,6 +61,7 @@ module main_module(
 	wire TAP_ENABLE;
 	wire TAP_RST;
 	wire TAP_TCKN;
+	wire LOAD;
 	
 	// BSR output
 	wire BSR_TDO;
@@ -58,6 +74,12 @@ module main_module(
 	
 	// Instruction register output
 	wire [3:0] INS_REG_INSTR_REG;
+	
+	assign STATE_OUT_MAIN = INS_REG_INSTR_REG;
+	//assign LEDs[4] = INS_REG_INSTR_REG[0];
+	//assign LEDs[5] = INS_REG_INSTR_REG[1];
+	//assign LEDs[6] = INS_REG_INSTR_REG[2];
+	//assign LEDs[7] = INS_REG_INSTR_REG[3];
 	wire INS_REG_TDO;
 	
 	// Instruction decoder outputs
@@ -96,7 +118,8 @@ module main_module(
 		.SELECT(TAP_SELECT), 
 		.ENABLE(TAP_ENABLE), 
 		.RST(TAP_RST), 
-		.TCKN(TAP_TCKN)
+		.TCKN(TAP_TCKN),
+		.LOAD(LOAD)
 	);
 	
 	bsr bsr_inst (
@@ -110,7 +133,7 @@ module main_module(
 		.SHIFT(TAP_SHIFT_DR),
 		.ENABLE(INS_DEC_BSR_ENABLE),
 		.MODE_TEST_NORMAL(INS_DEC_MODE_TEST_NORMAL),
-		.MODE_SHIFT_LOAD(TAP_ENABLE),
+		.MODE_SHIFT_LOAD(LOAD),
 		.CAPTURE_MODE_INPUT(INS_DEC_CAPTURE_MODE_INPUT),
 		.UPDATE_MODE_INPUT(INS_DEC_UPDATE_MODE_INPUT),
 		.CAPTURE_MODE_OUTPUT(INS_DEC_CAPTURE_MODE_OUTPUT),
@@ -119,15 +142,14 @@ module main_module(
 		.CORE_OUT_1(CORE_OUT_1),
 		.CORE_OUT_2(CORE_OUT_2),
 		.PIN_OUT_1(PIN_OUT_1),
-		.PIN_OUT_2(PIN_OUT_2)
+		.PIN_OUT_2(PIN_OUT_2),
+		.BSR_OUT(LEDs[7:2])
 	);
 	
 	device_id device_id_inst (
-		.TDI(TDI),
-		.CAPTURE(TAP_CAPTURE_DR),
 		.SHIFT(TAP_SHIFT_DR),
 		.ENABLE(INS_DEC_DEVICE_ID_ENABLE),
-		.MODE_SHIFT_LOAD(TAP_ENABLE),
+		.D_RST(TAP_RST),
 		.TDO(ID_TDO)
 	);
 	
@@ -143,7 +165,7 @@ module main_module(
 		 .SHIFT(TAP_SHIFT_IR),
 		 .UPDATE(TAP_UPDATE_IR),
 		 .ENABLE(TAP_SELECT),
-		 .MODE_SHIFT_LOAD(TAP_ENABLE),
+		 .MODE_SHIFT_LOAD(LOAD),
 		 .INSTR_REG(INS_REG_INSTR_REG),
 		 .TDO(INS_REG_TDO)
 	);

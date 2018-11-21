@@ -34,11 +34,13 @@ module instruction_reg(
 	 wire OUTPUT_UPDATE;
 	 wire CAPTURE;
 	 wire MODE_TEST_NORMAL;
+	 wire SYSTEM_DATA_IN;
 	 
 	 // ! is because SELECT is TRUE when DR is selected
 	 assign CAPTURE = !ENABLE & SHIFT;
 	 assign OUTPUT_UPDATE = !ENABLE & UPDATE;
 	 assign MODE_TEST_NORMAL = 1'b0;
+	 assign SYSTEM_DATA_IN = 1'b0;
 	 
 	 simple_cell instruction_cell_1 (
 		.TDIS(TDI),
@@ -46,9 +48,9 @@ module instruction_reg(
 		.UPDATE(OUTPUT_UPDATE),
 		.MODE_SHIFT_LOAD(MODE_SHIFT_LOAD),
 		.MODE_TEST_NORMAL(MODE_TEST_NORMAL),
-		.SYSTEM_DATA_IN(),
+		.SYSTEM_DATA_IN(SYSTEM_DATA_IN),
 		.TDOS(TDO_1),
-		.SYSTEM_DATA_OUT(INSTR_REG[0])
+		.SYSTEM_DATA_OUT(INSTR_REG[3])
 	);
 	
 	simple_cell instruction_cell_2 (
@@ -57,9 +59,9 @@ module instruction_reg(
 		.UPDATE(OUTPUT_UPDATE),
 		.MODE_SHIFT_LOAD(MODE_SHIFT_LOAD),
 		.MODE_TEST_NORMAL(MODE_TEST_NORMAL),
-		.SYSTEM_DATA_IN(),
+		.SYSTEM_DATA_IN(SYSTEM_DATA_IN),
 		.TDOS(TDO_2),
-		.SYSTEM_DATA_OUT(INSTR_REG[1])
+		.SYSTEM_DATA_OUT(INSTR_REG[2])
 	);
 	
 	simple_cell instruction_cell_3 (
@@ -68,9 +70,9 @@ module instruction_reg(
 		.UPDATE(OUTPUT_UPDATE),
 		.MODE_SHIFT_LOAD(MODE_SHIFT_LOAD),
 		.MODE_TEST_NORMAL(MODE_TEST_NORMAL),
-		.SYSTEM_DATA_IN(),
+		.SYSTEM_DATA_IN(SYSTEM_DATA_IN),
 		.TDOS(TDO_3),
-		.SYSTEM_DATA_OUT(INSTR_REG[2])
+		.SYSTEM_DATA_OUT(INSTR_REG[1])
 	);
 	
 	simple_cell instruction_cell_4 (
@@ -79,9 +81,9 @@ module instruction_reg(
 		.UPDATE(OUTPUT_UPDATE),
 		.MODE_SHIFT_LOAD(MODE_SHIFT_LOAD),
 		.MODE_TEST_NORMAL(MODE_TEST_NORMAL),
-		.SYSTEM_DATA_IN(),
+		.SYSTEM_DATA_IN(SYSTEM_DATA_IN),
 		.TDOS(TDO),
-		.SYSTEM_DATA_OUT(INSTR_REG[3])
+		.SYSTEM_DATA_OUT(INSTR_REG[0])
 	);
 
 

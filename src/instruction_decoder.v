@@ -52,7 +52,7 @@ module instruction_decoder(
 										 INSTR_REG == CODE_IDCODE) ? 1'b1 : 1'b0;
 	 assign CAPTURE_MODE_INPUT = (INSTR_REG == CODE_EXTEST) ? 1'b1 : 1'b0;
 	 assign CAPTURE_MODE_OUTPUT = (INSTR_REG == CODE_INTEST) ? 1'b1 : 1'b0;
-	 assign UPDATE_MODE_INPUT = (INSTR_REG == CODE_INTEST) ? 1'b1 : 1'b0;
-	 assign UPDATE_MODE_OUTPUT = (INSTR_REG == CODE_EXTEST) ? 1'b1 : 1'b0;
+	 assign UPDATE_MODE_INPUT = (INSTR_REG == CODE_INTEST | INSTR_REG == CODE_SAMPLE_PRELOAD) ? 1'b1 : 1'b0;
+	 assign UPDATE_MODE_OUTPUT = (INSTR_REG == CODE_EXTEST | INSTR_REG == CODE_SAMPLE_PRELOAD) ? 1'b1 : 1'b0;
 	 
 endmodule
