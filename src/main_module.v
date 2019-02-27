@@ -23,21 +23,23 @@ module main_module(
     input TMS,
     input TCK,
     input TRST,
-	 input CORE_IN_1,
-	 input CORE_IN_2,
-	 input PIN_IN_1,
-	 input PIN_IN_2,
-	 output CORE_OUT_1,
-	 output CORE_OUT_2,
-	 output PIN_OUT_1,
-	 output PIN_OUT_2,
+	input BIST_CLK,
+	input CORE_IN_1,
+	input CORE_IN_2,
+	input PIN_IN_1,
+	input PIN_IN_2,
+	input TUMBLER,
+	output CORE_OUT_1,
+	output CORE_OUT_2,
+	output PIN_OUT_1,
+	output PIN_OUT_2,
     output TDO,
-	 output [3:0] STATE_OUT_MAIN,
-	 output TMS_LA,
-	 output TDO_LA,
-	 output TDI_LA,
-	 output TCK_LA,
-	 output [7:0] LEDs
+	output [3:0] STATE_OUT_MAIN,
+	output TMS_LA,
+	output TDO_LA,
+	output TDI_LA,
+	output TCK_LA,
+	output [7:0] LEDs
     );
 	 
 	// For logic analyzer
@@ -47,8 +49,7 @@ module main_module(
 	assign TDI_LA = TDI;
 	assign TCK_LA = TCK;
 	
-	assign LEDs[1] = 1'b0;
-	assign LEDs[0] = 1'b0;
+	assign LEDs = TUMBLER ? BIST_STATUS_REG[7:0] : BIST_STATUS_REG[15:8];
 		
 	// TAP outputs
 	wire TAP_UPDATE_IR;
@@ -72,6 +73,26 @@ module main_module(
 	// Bypass register output
 	wire BYPASS_TDO;
 	
+	// BIST conf register output
+	wire BIST_CONF_REG_TDO;
+	
+	// BIST status register output
+	wire BIST_STATUS_REG_TDO;
+	
+	// BIST user test register output
+	wire BIST_USER_TEST_TDO;
+	
+	// BIST registers
+	wire [12:0] BIST_CONF_REG;
+	wire [15:0] BIST_STATUS_REG;
+	wire [2051:0] BIST_USER_TEST;
+	
+	// FSM ports
+	wire [3:0] FSM_IN;
+	wire [3:0] FSM_OUT;
+	wire [3:0] FSM_PRESET;
+	wire FSM_ENABLE;
+	
 	// Instruction register output
 	wire [3:0] INS_REG_INSTR_REG;
 	
@@ -83,11 +104,11 @@ module main_module(
 	wire INS_REG_TDO;
 	
 	// Instruction decoder outputs
-	wire [1:0] INS_DEC_G1;
-   wire INS_DEC_BYPASS_ENABLE;
-   wire INS_DEC_DEVICE_ID_ENABLE;
+	wire [3:0] INS_DEC_G1;
+	wire INS_DEC_BYPASS_ENABLE;
+	wire INS_DEC_DEVICE_ID_ENABLE;
 	wire INS_DEC_BSR_ENABLE;
-   wire INS_DEC_MODE_TEST_NORMAL;
+	wire INS_DEC_MODE_TEST_NORMAL;
 	wire INS_DEC_CAPTURE_MODE_INPUT;
 	wire INS_DEC_UPDATE_MODE_INPUT;
 	wire INS_DEC_CAPTURE_MODE_OUTPUT;
@@ -160,6 +181,54 @@ module main_module(
 		.TDO(BYPASS_TDO)
 	);
 	
+	bist_conf_reg bist_conf_reg_inst (
+		.SHIFT(TAP_SHIFT_DR),
+		.ENABLE(INS_DEC_BIST_CONF_REG_ENABLE),
+		.TDI(TDI),
+		.TDO(BIST_CONF_REG_TDO),
+		.BIST_CONF_REG(BIST_CONF_REG)
+	);
+	
+	bist_status_reg bist_status_reg_inst (
+		.SHIFT(TAP_SHIFT_DR),
+		.ENABLE(INS_DEC_BIST_STATUS_REG_ENABLE),
+	// [input when error occured] [output expected][output got][error code]
+		.STATUS_REG(BIST_STATUS_REG),
+		.TDO(BIST_STATUS_REG_TDO)
+	);
+	
+	bist_user_test bist_user_test_inst (
+		.TDI(TDI),
+		.SHIFT(TAP_SHIFT_DR),
+		.ENABLE(INS_DEC_BIST_USER_TEST_ENABLE),
+		.TDO(BIST_USER_TEST_TDO),
+	// [initial state] [input x] [expected output y]
+		.USER_TEST(BIST_USER_TEST)
+	);
+	
+	bist bist_inst (
+		.ENABLE(INS_DEC_BIST_ENABLE),
+		.CLK(BIST_CLK),
+//  [0 preset   ] [0-16 number of test] [0-256 user test length]
+//  [1 user test]
+		.BIST_CONF_REG(BIST_CONF_REG),
+		.BIST_USER_TEST(BIST_USER_TEST),
+		.FSM_IN(FSM_IN),
+		.FSM_OUT(FSM_OUT),
+		.FSM_PRESET(FSM_PRESET),
+		.FSM_ENABLE(FSM_ENABLE),
+// [input when error occured] [output expected][output got][error code]
+		.BIST_STATUS_REG(BIST_STATUS_REG)
+	);
+	
+	fsm fsm_inst (
+		.X(FSM_OUT),
+		.PRESET_Y(FSM_PRESET),
+		.Y(FSM_IN),
+		.CLK(BIST_CLK),
+		.ENABLE(FSM_ENABLE)
+	);
+	
 	instruction_reg instruction_reg_inst (
 		 .TDI(TDI),
 		 .SHIFT(TAP_SHIFT_IR),
@@ -176,6 +245,10 @@ module main_module(
 		.BYPASS_ENABLE(INS_DEC_BYPASS_ENABLE),
 		.DEVICE_ID_ENABLE(INS_DEC_DEVICE_ID_ENABLE),
 		.BSR_ENABLE(INS_DEC_BSR_ENABLE),
+		.BIST_ENABLE(INS_DEC_BIST_ENABLE),
+		.BIST_CONF_REG_ENABLE(INS_DEC_BIST_CONF_REG_ENABLE),
+		.BIST_STATUS_REG_ENABLE(INS_DEC_BIST_STATUS_REG_ENABLE),
+		.BIST_USER_TEST_ENABLE(INS_DEC_BIST_USER_TEST_ENABLE),
 		.MODE_TEST_NORMAL(INS_DEC_MODE_TEST_NORMAL),
 		.CAPTURE_MODE_INPUT(INS_DEC_CAPTURE_MODE_INPUT),
 		.UPDATE_MODE_INPUT(INS_DEC_UPDATE_MODE_INPUT),
@@ -188,6 +261,9 @@ module main_module(
 		.DEVICE_ID_TDO(ID_TDO),
 		.BSR_TDO(BSR_TDO),
 		.BYPASS_TDO(BYPASS_TDO),
+		.BIST_CONF_TDO(BIST_CONF_REG_TDO),
+		.BIST_STATUS_TDO(BIST_STATUS_REG_TDO),
+		.BIST_USER_TEST_TDO(BIST_USER_TEST_TDO),
 		.G1_TDO(G1_TDO)
 	);
 	

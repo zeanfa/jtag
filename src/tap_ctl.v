@@ -29,7 +29,7 @@ module tap_ctl(
     output SHIFT_DR,
     output reg CAPTURE_DR,
     output SELECT, // connect ! to ENABLE of instruction_reg
-    output reg ENABLE, // connect to MODE_SHIFT_SELECT
+    output reg ENABLE, // connect to MODE_SHIFT_LOAD
     output RST,
     output TCKN,
 	 output LOAD,
